@@ -14,14 +14,21 @@
         return {
             scope: true,
             link: function ($scope, element, attr) {
-                var timeoutHandle, subscribeHandle;
+                var showTimeoutHandle, hideTimeoutHandle, subscribeHandle;
+                var delay = Number(attr.duration || 5000);
 
                 $scope.flash = {};
 
                 $scope.hide = function () {
-                    removeAlertClasses();
                     if (!isBlank(attr.activeClass)) {
                         element.removeClass(attr.activeClass);
+                    }
+                    if (!isBlank(attr.deactiveClass)) {
+                        element.addClass(attr.deactiveClass);
+                    }
+
+                    if (delay > 0) {
+                        hideTimeoutHandle = $timeout(clearFlash, delay);
                     }
                 };
 
@@ -37,9 +44,17 @@
                     });
                 }
 
+                function clearFlash() {
+                    $scope.flash = {};
+                    removeAlertClasses();
+                }
+
                 function show(message, type) {
-                    if (timeoutHandle) {
-                        $timeout.cancel(timeoutHandle);
+                    if (showTimeoutHandle) {
+                        $timeout.cancel(showTimeoutHandle);
+                    }
+                    if (hideTimeoutHandle) {
+                        $timeout.cancel(hideTimeoutHandle);
                     }
 
                     $scope.flash.type = type;
@@ -52,15 +67,17 @@
                     if (!isBlank(attr.activeClass)) {
                         element.addClass(attr.activeClass);
                     }
+                    if (!isBlank(attr.deactiveClass)) {
+                        element.removeClass(attr.deactiveClass);
+                    }
 
                     if (!message) {
                         $scope.hide();
                         return;
                     }
 
-                    var delay = Number(attr.duration || 5000);
                     if (delay > 0) {
-                        timeoutHandle = $timeout($scope.hide, delay);
+                        showTimeoutHandle = $timeout($scope.hide, delay);
                     }
                 }
 
